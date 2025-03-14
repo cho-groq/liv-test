@@ -1,0 +1,20 @@
+1
+00:00:00,000 --> 00:00:05,520
+ This month I traveled to Stanford University for TreeHacks, their annual collegiate hackathon,
+
+2
+00:00:05,520 --> 00:00:09,760
+ not as a participant, but as a sponsor. Here are three things I learned.
+
+3
+00:00:09,760 --> 00:00:15,440
+ One, go for sponsored track prizes. For the general track, first, second, and third place overall,
+
+4
+00:00:15,440 --> 00:00:19,760
+ you're competing against every hackathon team there. But if you try going for sponsored track
+
+5
+00:00:19,760 --> 00:00:24,060
+ prizes, you'll have a better chance of winning them since you'll be competing against less teams.
+

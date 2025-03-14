@@ -177,6 +177,5 @@ cython_debug/
 .env
 *.mp4
 *.mp3
-*.srt
 venv
 *.wav
