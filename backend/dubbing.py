@@ -6,36 +6,13 @@ import io
 import base64
 from dotenv import load_dotenv
 import datetime
-from moviepy import *
-from moviepy.audio import *
-from moviepy.video.tools.subtitles import SubtitlesClip
-from moviepy.video.io.VideoFileClip import VideoFileClip
 import srt
-
-from pydub import AudioSegment
-from pydub.effects import speedup
 
 load_dotenv()  
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 
-def convert_mp4_to_mp3(mp4_filepath, mp3_file):
-    """
-    Converts an MP4 file to MP3.
-
-    Args:
-        mp4_filepath: Path to the input MP4 file.
-        mp3_filepath: Path to save the output MP3 file.
-    """
-    video_clip = VideoFileClip(mp4_filepath)
-
-    # Extract audio from video
-    video_clip.audio.write_audiofile(mp3_file)
-    print("now is an mp3")
-    video_clip.close()
-
-# Step 1: Transcribe Audio
 def transcribe_audio(mp3_file):
 
 # Open the audio file
@@ -75,38 +52,6 @@ def translate(text):
 
     print(completion.choices[0].message.content)
     return completion.choices[0].message.content 
-
-# would iterate through each timestamp and only pass in 
-def convert_text_into_audio(text, index):
-    url = "https://api.groq.com/openai/v1/audio/speech"
-    
-    headers = {
-        "Authorization": f"Bearer {os.environ.get("GROQ_API_KEY")}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "model": "playai-tts-arabic",
-        "input": text,
-        "voice": "Nasser-PlayAI",  # Change as needed
-        "response_format": "wav"  # Explicitly set response format to WAV
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        print(response)
-        if response.status_code == 200:
-            filename = f"output_{index}.wav"
-            with open(filename, "wb") as f:
-                f.write(response.content)
-            print(f"Audio saved as {filename}")
-            return
-        else:
-            print("here")
-            return None
-    except Exception as e:
-        print("exception"+ e)
-        return None
 
 
 video_file = "../input.mp4"
