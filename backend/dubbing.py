@@ -58,8 +58,6 @@ video_file = "../input.mp4"
 mp3_file = "../output.mp3"
 output_file = "output_with_subtitles.mp4"
 
-# take in video file, remove audio and get mp3 from it
-convert_mp4_to_mp3(video_file, mp3_file)
 
 # with mp3, transcribe with whisper and get sentence timestamps
 segments = transcribe_audio(mp3_file)
@@ -114,34 +112,7 @@ def process_audio_segments(segments, output_filename="final_output.wav"):
             print(f"File {file_name} not found, skipping...")
             continue
         
-        audio = AudioSegment.from_wav(file_name)
-
-        # # Adjust speed if too long
-        if len(audio) > max_duration_ms:
-            audio = adjust_audio_speed(audio, max_duration_ms)
         
-        # Append the audio segment to final_audio
-        if len(final_audio) < start_ms:
-            final_audio += AudioSegment.silent(duration=start_ms - len(final_audio))  # Add silence before the segment if needed
-        
-        print(f"Final audio length before appending: {len(final_audio)} ms")
-        final_audio += audio  # Append the audio
-
-        # Append silence after the audio if the segment is too short
-        remaining_duration_ms = max_duration_ms - len(audio)  # Calculate how much silence is needed
-        if remaining_duration_ms > 0:
-            silence = AudioSegment.silent(duration=remaining_duration_ms)
-            final_audio += silence  # Append silence after the audio if the segment is too short
-
-        print(f"Final audio length before overlay: {len(final_audio)} ms")
-        print(f"Segment length: {len(audio)} ms")
-        # Overlay the adjusted audio at the correct position
-        final_audio = final_audio.overlay(audio, position=start_ms)
-
-    # Export the final merged audio
-    final_audio.export(output_filename, format="wav")
-    print(f"Final audio saved as {output_filename}")
-
 process_audio_segments(segments)
 
 
@@ -162,5 +133,3 @@ def replace_audio(mp4_file, wav_file, output_file="output_video.mp4"):
 
 # Example usage
 replace_audio(video_file, "final_output.wav", "final.mp4")
-
-# you could do them async to make the audio generation part faster

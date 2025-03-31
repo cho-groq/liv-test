@@ -146,57 +146,62 @@ with open(srt_file1, "w", encoding="utf-8") as f:
 with open(srt_file2, "w", encoding="utf-8") as f:
     f.write(srt.compose(translated_subs))
 
-def adjust_audio_speed(audio, max_duration_ms, speed_factor=1.01):
-    """Increase speed by speed_factor until it fits within max_duration_ms."""
-    while len(audio) > max_duration_ms:
-        print("length of audio", len(audio))
-        audio = speedup(audio, playback_speed=speed_factor)
-    return audio
+def adjust_audio_speed(audio, max_duration_ms):
+    """Adjust audio speed to fit within max_duration_ms in one step."""
+    current_length = len(audio)
+    if current_length <= max_duration_ms:
+        return audio
+    
+    # Calculate required speed factor directly
+    required_speed_factor = current_length / max_duration_ms
+    return speedup(audio, playback_speed=required_speed_factor)
 
 # once all audio are complete, merge them together.
 def process_audio_segments(segments, output_filename="final_output.wav"):
-    final_audio = AudioSegment.silent(duration=1)  # Start with small duration
-    
-    for index, segment in enumerate(segments):
-        start_ms = int(float(segment["start"]) * 1000)  # Convert seconds to milliseconds
+    # First, determine the total duration needed
+    max_end_time_ms = 0
+    for segment in segments:
         end_ms = int(float(segment["end"]) * 1000)
-        print(f"Segment {index}: Start: {start_ms} ms, End: {end_ms} ms")
+        if end_ms > max_end_time_ms:
+            max_end_time_ms = end_ms
+    
+    # Create an empty audio segment for the entire duration
+    final_audio = AudioSegment.silent(duration=max_end_time_ms + 1000)  # Add some buffer
+    
+    # Place each segment at its correct position
+    for index, segment in enumerate(segments):
+        start_ms = int(float(segment["start"]) * 1000)
+        end_ms = int(float(segment["end"]) * 1000)
         max_duration_ms = end_ms - start_ms  # Allowed duration
-
+        
+        print(f"Segment {index}: Start: {start_ms} ms, End: {end_ms} ms, Max Duration: {max_duration_ms} ms")
+        
         # Load corresponding audio file
         file_name = f"output_{index}.wav"
         if not os.path.exists(file_name):
             print(f"File {file_name} not found, skipping...")
             continue
         
+        # Load the audio
         audio = AudioSegment.from_wav(file_name)
-
-        # # Adjust speed if too long
+        print(f"Original audio length: {len(audio)} ms")
+        
+        # Adjust speed if too long (using improved function)
         if len(audio) > max_duration_ms:
             audio = adjust_audio_speed(audio, max_duration_ms)
+            print(f"Adjusted audio length: {len(audio)} ms")
         
-        # Append the audio segment to final_audio
-        if len(final_audio) < start_ms:
-            final_audio += AudioSegment.silent(duration=start_ms - len(final_audio))  # Add silence before the segment if needed
-        
-        print(f"Final audio length before appending: {len(final_audio)} ms")
-        final_audio += audio  # Append the audio
-
-        # Append silence after the audio if the segment is too short
-        remaining_duration_ms = max_duration_ms - len(audio)  # Calculate how much silence is needed
-        if remaining_duration_ms > 0:
-            silence = AudioSegment.silent(duration=remaining_duration_ms)
-            final_audio += silence  # Append silence after the audio if the segment is too short
-
-        print(f"Final audio length before overlay: {len(final_audio)} ms")
-        print(f"Segment length: {len(audio)} ms")
-        # Overlay the adjusted audio at the correct position
+        # Overlay at the correct position
         final_audio = final_audio.overlay(audio, position=start_ms)
-
-    # Export the final merged audio
-    final_audio.export(output_filename, format="wav")
+    
+    # Export the final merged audio with specific parameters
+    final_audio.export(
+        output_filename, 
+        format="wav",
+        parameters=["-ar", "44100", "-ac", "1", "-ab", "192k"]  # Consistent export parameters
+    )
     print(f"Final audio saved as {output_filename}")
-
+    
 process_audio_segments(segments)
 
 
